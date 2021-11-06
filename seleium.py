@@ -31,7 +31,7 @@ def send_server(receiver, text):
     return(result)
 opt = webdriver.FirefoxOptions()
 # 设置无界面
-#opt.add_argument("--headless")
+opt.add_argument("--headless")
 # 禁用 gpu
 opt.add_argument('--disable-gpu')
 # 指定 firefox 的安装路径，如果配置了环境变量则不需指定
