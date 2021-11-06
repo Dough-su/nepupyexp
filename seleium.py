@@ -18,6 +18,7 @@ from selenium.webdriver.firefox.service import Service
 config = configparser.ConfigParser()
 path = r'.\config.ini'
 # 配置
+print("Autor:冰美式不加糖\nNotice:此版本为预发布版本！\n本软件完全免费，如果你是付费购买，请立刻举报卖家！")
 config.read(path)
 notify=config['notify']['serverchan']
 def send_server(receiver, text):
@@ -29,16 +30,13 @@ def send_server(receiver, text):
     return(result)
 opt = webdriver.FirefoxOptions()
 # 设置无界面
-opt.add_argument("--headless")
+#opt.add_argument("--headless")
 # 禁用 gpu
 opt.add_argument('--disable-gpu')
-#禁用缓存
-
 # 指定 firefox 的安装路径，如果配置了环境变量则不需指定
 opt.binary_location = ".\Firefox\App\Firefox\\firefox.exe"
 s=Service(r'.\Firefox\geckodriver.exe')
 browser = webdriver.Firefox( service=s, options=opt)
-print("Autor:冰美式不加糖\nNotice:此版本为测试版本，没有异常捕捉！\n本软件完全免费，如果你是付费购买，请立刻举报卖家！")
 print("读取配置中…")
 #抢课模式，监控模式，监控模式为1，抢课模式为0,默认为1
 mode=config['mode']['mode']
@@ -62,19 +60,28 @@ print("开始登陆中…")
 browser.find_element(By.ID,"user_login").send_keys(username)	
 browser.find_element(By.ID,"user_password").send_keys(password1)	
 browser.find_element(By.NAME,"commit").click()
-browser.find_element(By.ID,"user_account_numb").send_keys(username2)
-browser.find_element(By.ID,"user_password").send_keys(password2)
 print("请记住弹出的验证码,关闭后输入验证码,如果没有弹出验证码，请手动到目录里点开a.png")
 #得到验证码在屏幕中的坐标位置
-a = browser.find_element(By.CLASS_NAME,'rucaptcha-image')
-a.screenshot('a.png')
-img=Image.open('a.png')
-img.show()
-verify=input("请输入验证码:")
-#判断用户是否输入验证码
-#登入进大物平台
-browser.find_element(By.NAME,"_rucaptcha").send_keys(verify)
-browser.find_element(By.NAME,"commit").click()    
+logincheck=1
+while(logincheck):
+    browser.find_element(By.ID,"user_account_numb").send_keys(username2)
+    browser.find_element(By.ID,"user_password").send_keys(password2)
+    a = browser.find_element(By.CLASS_NAME,'rucaptcha-image')
+    a.screenshot('a.png')
+    img=Image.open('a.png')
+    img.show()
+    verify=input("请输入验证码:")
+    #登入进大物平台
+    browser.find_element(By.NAME,"_rucaptcha").send_keys(verify)
+    browser.find_element(By.NAME,"commit").click()  
+    sleep(2)
+    if(browser.find_element(By.XPATH,"//*[@id='flash-messages']/div").text=="验证码不正确，请重新输入！"):
+        print("验证码输入错误，咱们能再来一次吗？")
+    if(browser.find_element(By.XPATH,"//*[@id='flash-messages']/div").text=="登录成功！"):
+        logincheck=0
+    if(browser.find_element(By.XPATH,"//*[@id='flash-messages']/div").text=="用户名或密码错误，请重新输入！"):
+        print("用户名或密码错误，请去config.ini重新调整大物平台的用户名或密码")
+        browser.quit() 
 # 获取当前标签页1的句柄
 handle = browser.current_window_handle 
 #读取课程
@@ -103,7 +110,9 @@ with open('freeday.txt') as f:
         freedays = [int(i) for i in line.split( )]
         print (freedays)
         file.close()
+        
 totaltime=0        
+browser.set_page_load_timeout(3)#这里是为了修复测试版本有时网页刷新超时 
 while(mode):
     t = TicToc()  # create instance of class
     start_time= t.tic() #start timer
@@ -121,7 +130,7 @@ while(mode):
                 if(freedays[p]==combineday):
                     browser.find_element(By.XPATH,"/html/body/main/div/div[2]/div[2]/div/div[1]/div[2]/table/tbody[2]/tr["+str(i)+"]/td[9]/a").click()
                     okla=str(browser.find_element(By.XPATH,"/html/body/main/div/div[2]/div[2]/div/div[1]/div[2]/table/tbody[2]/tr[1]/td[1]").text)+str(combineday)
-                    print("已选中"+str(browser.find_element(By.XPATH,"/html/body/main/div/div[2]/div[2]/div/div[1]/div[2]/table/tbody[2]/tr[1]/td[1]").text)+str(combineday))
+                    print("已选中"+str(browser.find_element(By.XPATH,"/html/body/main/div/div[2]/div[2]/div/div[1]/div[2]/table/tbody[2]/tr[1]/td[1]").text)+str(combineday), end="")
                     wait2 = WebDriverWait(browser,10,0.5)
                     wait2.until(lambda diver:browser.find_element(By.XPATH,"//*[@id='flash-messages']/div"))
                     if(browser.find_element(By.XPATH,"//*[@id='flash-messages']/div").text=="选课失败，该实验已满！"or"选课失败，所选实验时间无效！"):
@@ -153,7 +162,7 @@ while(mode):
                         if (str(browser.find_element(By.XPATH,"/html/body/main/div/div[2]/div[2]/div/div[1]/div[2]/table/tbody[2]/tr["+str(i)+"]/td[7]").text)>str(browser.find_element(By.XPATH,"/html/body/main/div/div[2]/div[2]/div/div[1]/div[2]/table/tbody[2]/tr["+str(i)+"]/td[8]").text)):
                             browser.find_element(By.XPATH,"/html/body/main/div/div[2]/div[2]/div/div[1]/div[2]/table/tbody[2]/tr["+str(i)+"]/td[9]/a").click()
                             okla=str(browser.find_element(By.XPATH,"/html/body/main/div/div[2]/div[2]/div/div[1]/div[2]/table/tbody[2]/tr[1]/td[1]").text)+str(combineday)
-                            print("已选中"+str(browser.find_element(By.XPATH,"/html/body/main/div/div[2]/div[2]/div/div[1]/div[2]/table/tbody[2]/tr[1]/td[1]").text)+str(combineday))
+                            print("已选中"+str(browser.find_element(By.XPATH,"/html/body/main/div/div[2]/div[2]/div/div[1]/div[2]/table/tbody[2]/tr[1]/td[1]").text)+str(combineday), end="")
                             wait2 = WebDriverWait(browser,10,0.5)
                             wait2.until(lambda diver:browser.find_element(By.XPATH,"//*[@id='flash-messages']/div"))
                             if(browser.find_element(By.XPATH,"//*[@id='flash-messages']/div").text=="选课失败，该实验已满！"or"选课失败，所选实验时间无效！"):
@@ -163,7 +172,14 @@ while(mode):
                                 send_server("抢课成功通知:", okla)  
                                 mode=0
             print("当前时间"+str(browser.find_element(By.XPATH,"/html/body/main/div/div[2]/div[2]/div/div[1]/div[2]/table/tbody[2]/tr[1]/td[1]").text)+"没有余量，继续监控")
-            browser.refresh() 
+            while True:
+                try:
+                    browser.refresh()
+                    break
+                except:
+                    print("捕获到刷新超时，以重试(下一个版本此提示取消)")
+                    send_server("超时通知:", "就是单纯超时了")  
+                    pass 
     except Exception as msg:
     # 时间戳名称，防止覆盖
         name = time.strftime("%H.%M.%S")
