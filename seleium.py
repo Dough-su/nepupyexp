@@ -18,6 +18,7 @@ from selenium.webdriver.firefox.service import Service
 config = configparser.ConfigParser()
 path = r'.\config.ini'
 # 配置
+print("Autor:冰美式不加糖\nNotice:此版本为测试版本，没有异常捕捉！\n本软件完全免费，如果你是付费购买，请立刻举报卖家！")
 config.read(path)
 notify=config['notify']['serverchan']
 def send_server(receiver, text):
@@ -32,13 +33,10 @@ opt = webdriver.FirefoxOptions()
 opt.add_argument("--headless")
 # 禁用 gpu
 opt.add_argument('--disable-gpu')
-#禁用缓存
-
 # 指定 firefox 的安装路径，如果配置了环境变量则不需指定
 opt.binary_location = ".\Firefox\App\Firefox\\firefox.exe"
 s=Service(r'.\Firefox\geckodriver.exe')
 browser = webdriver.Firefox( service=s, options=opt)
-print("Autor:冰美式不加糖\nNotice:此版本为测试版本，没有异常捕捉！\n本软件完全免费，如果你是付费购买，请立刻举报卖家！")
 print("读取配置中…")
 #抢课模式，监控模式，监控模式为1，抢课模式为0,默认为1
 mode=config['mode']['mode']
@@ -104,6 +102,7 @@ with open('freeday.txt') as f:
         print (freedays)
         file.close()
 totaltime=0        
+browser.set_page_load_timeout(3)#这里是为了修复测试版本有时网页刷新超时 
 while(mode):
     t = TicToc()  # create instance of class
     start_time= t.tic() #start timer
@@ -121,7 +120,7 @@ while(mode):
                 if(freedays[p]==combineday):
                     browser.find_element(By.XPATH,"/html/body/main/div/div[2]/div[2]/div/div[1]/div[2]/table/tbody[2]/tr["+str(i)+"]/td[9]/a").click()
                     okla=str(browser.find_element(By.XPATH,"/html/body/main/div/div[2]/div[2]/div/div[1]/div[2]/table/tbody[2]/tr[1]/td[1]").text)+str(combineday)
-                    print("已选中"+str(browser.find_element(By.XPATH,"/html/body/main/div/div[2]/div[2]/div/div[1]/div[2]/table/tbody[2]/tr[1]/td[1]").text)+str(combineday))
+                    print("已选中"+str(browser.find_element(By.XPATH,"/html/body/main/div/div[2]/div[2]/div/div[1]/div[2]/table/tbody[2]/tr[1]/td[1]").text)+str(combineday), end="")
                     wait2 = WebDriverWait(browser,10,0.5)
                     wait2.until(lambda diver:browser.find_element(By.XPATH,"//*[@id='flash-messages']/div"))
                     if(browser.find_element(By.XPATH,"//*[@id='flash-messages']/div").text=="选课失败，该实验已满！"or"选课失败，所选实验时间无效！"):
@@ -153,7 +152,7 @@ while(mode):
                         if (str(browser.find_element(By.XPATH,"/html/body/main/div/div[2]/div[2]/div/div[1]/div[2]/table/tbody[2]/tr["+str(i)+"]/td[7]").text)>str(browser.find_element(By.XPATH,"/html/body/main/div/div[2]/div[2]/div/div[1]/div[2]/table/tbody[2]/tr["+str(i)+"]/td[8]").text)):
                             browser.find_element(By.XPATH,"/html/body/main/div/div[2]/div[2]/div/div[1]/div[2]/table/tbody[2]/tr["+str(i)+"]/td[9]/a").click()
                             okla=str(browser.find_element(By.XPATH,"/html/body/main/div/div[2]/div[2]/div/div[1]/div[2]/table/tbody[2]/tr[1]/td[1]").text)+str(combineday)
-                            print("已选中"+str(browser.find_element(By.XPATH,"/html/body/main/div/div[2]/div[2]/div/div[1]/div[2]/table/tbody[2]/tr[1]/td[1]").text)+str(combineday))
+                            print("已选中"+str(browser.find_element(By.XPATH,"/html/body/main/div/div[2]/div[2]/div/div[1]/div[2]/table/tbody[2]/tr[1]/td[1]").text)+str(combineday), end="")
                             wait2 = WebDriverWait(browser,10,0.5)
                             wait2.until(lambda diver:browser.find_element(By.XPATH,"//*[@id='flash-messages']/div"))
                             if(browser.find_element(By.XPATH,"//*[@id='flash-messages']/div").text=="选课失败，该实验已满！"or"选课失败，所选实验时间无效！"):
@@ -163,7 +162,14 @@ while(mode):
                                 send_server("抢课成功通知:", okla)  
                                 mode=0
             print("当前时间"+str(browser.find_element(By.XPATH,"/html/body/main/div/div[2]/div[2]/div/div[1]/div[2]/table/tbody[2]/tr[1]/td[1]").text)+"没有余量，继续监控")
-            browser.refresh() 
+            while True:
+                try:
+                    browser.refresh()
+                    break
+                except:
+                    print("捕获到刷新超时，以重试(下一个版本此提示取消)")
+                    send_server("超时通知:", "就是单纯超时了")  
+                    pass 
     except Exception as msg:
     # 时间戳名称，防止覆盖
         name = time.strftime("%H.%M.%S")
