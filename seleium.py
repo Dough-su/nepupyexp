@@ -7,6 +7,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from time import sleep, strftime, localtime, time
 from PIL import Image
+import sys
 import requests
 #字符串被当作url提交时会被自动进行url编码处理
 from urllib.parse import quote,unquote
@@ -30,7 +31,7 @@ def send_server(receiver, text):
     return(result)
 opt = webdriver.FirefoxOptions()
 # 设置无界面
-opt.add_argument("--headless")
+#opt.add_argument("--headless")
 # 禁用 gpu
 opt.add_argument('--disable-gpu')
 # 指定 firefox 的安装路径，如果配置了环境变量则不需指定
@@ -112,40 +113,12 @@ with open('freeday.txt') as f:
         file.close()        
 totaltime=0        
 browser.set_page_load_timeout(3)#这里是为了修复测试版本有时网页刷新超时 
-while(mode):
-    t = TicToc()  # create instance of class
-    start_time= t.tic() #start timer
-    for page in range(len(all_handles)-1):
-        browser.switch_to.window(browser.window_handles[page])
-        wait = WebDriverWait(browser,10,0.5)
-        wait.until(lambda diver:browser.find_element(By.XPATH,"/html/body/main/div/div[2]/div[2]/div/div[2]/span/b"))
-        total=browser.find_element(By.XPATH,"/html/body/main/div/div[2]/div[2]/div/div[2]/span/b")
-        for i in range(int(total.text)):
-            i=i+1
-            weekday=browser.find_element(By.XPATH,"/html/body/main/div/div[2]/div[2]/div/div[1]/div[2]/table/tbody[2]/tr["+str(i)+"]/td[5]")
-            part=browser.find_element(By.XPATH,"/html/body/main/div/div[2]/div[2]/div/div[1]/div[2]/table/tbody[2]/tr["+str(i)+"]/td[6]")
-            combineday=int(weekday.text+part.text)
-            for p in range(len(freedays)):
-                if(freedays[p]==combineday):
-                    browser.find_element(By.XPATH,"/html/body/main/div/div[2]/div[2]/div/div[1]/div[2]/table/tbody[2]/tr["+str(i)+"]/td[9]/a").click()
-                    okla=str(browser.find_element(By.XPATH,"/html/body/main/div/div[2]/div[2]/div/div[1]/div[2]/table/tbody[2]/tr[1]/td[1]").text)+str(combineday)
-                    print("已选中"+str(browser.find_element(By.XPATH,"/html/body/main/div/div[2]/div[2]/div/div[1]/div[2]/table/tbody[2]/tr[1]/td[1]").text)+str(combineday), end="")
-                    wait2 = WebDriverWait(browser,10,0.5)
-                    wait2.until(lambda diver:browser.find_element(By.XPATH,"//*[@id='flash-messages']/div"))
-                    if(browser.find_element(By.XPATH,"//*[@id='flash-messages']/div").text=="选课失败，该实验已满！"or"选课失败，所选实验时间无效！"):
-                        print("此课满课,下一个")
-                    else:
-                        print("选课应该或许成功吧！")
-                        send_server("抢课成功通知:", okla)
-                        mode=0
-    totaltime=totaltime+1    
-    print("已经遍历次数",totaltime)                
-    end_time = t.toc()
 mode=mode^1
 while(mode):
         t = TicToc()  # create instance of class
         start_time= t.tic() #start timer
         for page in range(len(all_handles)-1):
+            cacheelem="缓存用，别报错了"
             browser.switch_to.window(browser.window_handles[page])
             wait = WebDriverWait(browser,10,0.5)
             wait.until(lambda diver:browser.find_element(By.XPATH,"/html/body/main/div/div[2]/div[2]/div/div[2]/span/b"))
@@ -158,18 +131,25 @@ while(mode):
                 for p in range(len(freedays)):
                     if(freedays[p]==combineday):
                         if (str(browser.find_element(By.XPATH,"/html/body/main/div/div[2]/div[2]/div/div[1]/div[2]/table/tbody[2]/tr["+str(i)+"]/td[7]").text)>str(browser.find_element(By.XPATH,"/html/body/main/div/div[2]/div[2]/div/div[1]/div[2]/table/tbody[2]/tr["+str(i)+"]/td[8]").text)):
+                            cacheelem=str(browser.find_element(By.XPATH,"/html/body/main/div/div[2]/div[2]/div/div[1]/div[2]/table/tbody[2]/tr[1]/td[1]").text)
                             browser.find_element(By.XPATH,"/html/body/main/div/div[2]/div[2]/div/div[1]/div[2]/table/tbody[2]/tr["+str(i)+"]/td[9]/a").click()
-                            okla=str(browser.find_element(By.XPATH,"/html/body/main/div/div[2]/div[2]/div/div[1]/div[2]/table/tbody[2]/tr[1]/td[1]").text)+str(combineday)
-                            print(str(browser.find_element(By.XPATH,"/html/body/main/div/div[2]/div[2]/div/div[1]/div[2]/table/tbody[2]/tr[1]/td[1]").text)+str(combineday), end="")
                             wait2 = WebDriverWait(browser,10,0.5)
                             wait2.until(lambda diver:browser.find_element(By.XPATH,"//*[@id='flash-messages']/div"))
+                            try:
+                             okla=str(browser.find_element(By.XPATH,"/html/body/main/div/div[2]/div[2]/div/div[1]/div[2]/table/tbody[2]/tr[1]/td[1]").text)
+                            except:
+                              print("抢到课了"+cacheelem)
+                              send_server("抢课成功通知:", cacheelem)  
+                              mode=0
+                              sys.exit(0)  
+                            cacheelem=okla
+                            print(okla+str(combineday), end="")
+                            wait2 = WebDriverWait(browser,10,0.5)
+                            wait2.until(lambda diver:browser.find_element(By.XPATH,"//*[@id='flash-messages']/div"))
+                            print(browser.find_element(By.XPATH,"//*[@id='flash-messages']/div").text)
                             if(browser.find_element(By.XPATH,"//*[@id='flash-messages']/div").text=="选课失败，该实验已满！"or"选课失败，所选实验时间无效！"):
                                 print("课程无效或已满，下一个")
-                            else:
-                                print("抢到了"+okla)
-                                send_server("抢课成功通知:", okla)  
-                                mode=0
-            print(str(browser.find_element(By.XPATH,"/html/body/main/div/div[2]/div[2]/div/div[1]/div[2]/table/tbody[2]/tr[1]/td[1]").text)+"没有余量，继续监控")
+            print(cacheelem+"没有余量，继续监控")
             while True:
                 try:
                     browser.refresh()
