@@ -153,6 +153,7 @@ while(mode):
                             except:
                               print("抢到课了"+cacheelem)
                               send_server("抢课成功通知:", cacheelem)  
+                              #这里要确保完全退出
                               mode=0
                               sys.exit(0)
                             #这里开始对并没有出现上面的情况的条件进行解析    
