@@ -1,16 +1,12 @@
-from os import system
-from requests.api import options
 from selenium import webdriver
-from selenium.webdriver.firefox import service
 from selenium.webdriver.support.wait import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
-from time import sleep, strftime, localtime, time
+from time import sleep
 from PIL import Image
 import sys
 import requests
 #字符串被当作url提交时会被自动进行url编码处理
-from urllib.parse import quote,unquote
+from urllib.parse import quote
 #quote() 明文转译文    unquote()译文转明文
 import configparser
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
@@ -19,7 +15,7 @@ from selenium.webdriver.firefox.service import Service
 config = configparser.ConfigParser()
 path = r'.\config.ini'
 # 配置
-print("Autor:冰美式不加糖\nNotice:此版本为预发布版本！\n本软件完全免费，如果你是付费购买，请立刻举报卖家！")
+print("Autor:冰美式不加糖\nNotice:此版本为1.0.0版本！\n本软件完全免费，如果你是付费购买，请立刻举报卖家！")
 config.read(path)
 notify=config['notify']['serverchan']
 def send_server(receiver, text):
