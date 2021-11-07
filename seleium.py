@@ -36,9 +36,6 @@ opt.binary_location = ".\Firefox\App\Firefox\\firefox.exe"
 s=Service(r'.\Firefox\geckodriver.exe')
 browser = webdriver.Firefox( service=s, options=opt)
 print("读取配置中…")
-#抢课模式，监控模式，监控模式为1，抢课模式为0,默认为1
-mode=config['mode']['mode']
-mode=int(mode)
 #webvpn的学号和密码
 username=config['webvpn']['username']
 password1=config['webvpn']['password']
@@ -112,8 +109,7 @@ with open('freeday.txt') as f:
 totaltime=0        
 #这里是为了修复测试版本监控模式有些时候刷新超时
 browser.set_page_load_timeout(3)
-#这里为了兼容测试版本的mode，新版本已经取消mode功能
-mode=mode^1
+mode=1
 #有些时候，控件没有加载出来导致程序崩溃，所以这里需要等待
 wait2 = WebDriverWait(browser,10,0.5)
 #监控模式代码
@@ -172,4 +168,3 @@ while(mode):
         print("已经遍历次数",totaltime)     
         #输出此次遍历的时间                    
         end_time = t.toc()
-browser.quit()    
